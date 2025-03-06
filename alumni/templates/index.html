@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            margin: 0;
+            color: white;
+        }
+        
+        h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        #chat-container {
+            width: 90%;
+            max-width: 450px;
+            height: 500px;
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .message {
+            padding: 10px;
+            margin: 8px;
+            border-radius: 10px;
+            max-width: 75%;
+            word-wrap: break-word;
+            font-size: 14px;
+        }
+        .user {
+            background-color: #007bff;
+            color: white;
+            align-self: flex-end;
+        }
+        .bot {
+            background-color: #f1f1f1;
+            color: black;
+            align-self: flex-start;
+        }
+        
+        #input-container {
+            display: flex;
+            margin-top: 15px;
+            width: 90%;
+            max-width: 450px;
+        }
+        
+        #user-input {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            outline: none;
+        }
+        
+        #send-btn {
+            padding: 12px 20px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            margin-left: 10px;
+            transition: 0.3s;
+            font-weight: bold;
+        }
+        
+        #send-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h2>Chatbot</h2>
+    <div id="chat-container"></div>
+    <div id="input-container">
+        <input type="text" id="user-input" placeholder="Type a message..." />
+        <button id="send-btn">Send</button>
+    </div>
+    <script>
+        document.getElementById("send-btn").addEventListener("click", sendMessage);
+        document.getElementById("user-input").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") sendMessage();
+        });
+
+        function sendMessage() {
+            let userInput = document.getElementById("user-input").value.trim();
+            if (!userInput) return;
+            
+            addMessage(userInput, "user");
+
+            fetch("http://127.0.0.1:5000/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: userInput })
+            })
+            .then(response => response.json())
+            .then(data => addMessage(data.response || "No response from bot", "bot"))
+            .catch(error => addMessage("Error: " + error, "bot"));
+            
+            document.getElementById("user-input").value = "";
+        }
+
+        function addMessage(text, sender) {
+            let messageDiv = document.createElement("div");
+            messageDiv.innerHTML = marked.parse(text);
+            messageDiv.classList.add("message", sender);
+            document.getElementById("chat-container").appendChild(messageDiv);
+            document.getElementById("chat-container").scrollTop = document.getElementById("chat-container").scrollHeight;
+        }
+    </script>
+</body>
+</html>
